@@ -21,10 +21,10 @@ go version go1.20.3 linux/amd64
 フレームワーク：Go + Gin
 シンプルな構造：単一のmain.goファイルに機能を実装
 環境設定：.env.devと.env.prodファイルで環境変数管理
-実装済み機能
-GET / - Hello Worldレスポンス（JSON形式）
-GET /api/v1/hello - シンプルなAPIエンドポイント
-GET /api/v1/health - ヘルスチェックエンドポイント
+router.GET("/" はhealth
+
+api/hello はhello world のレスポンス
+
 環境変数に基づく動的な設定（ポート番号、APIバージョンなど）
 環境に応じたログレベル設定
 Dockerサポート

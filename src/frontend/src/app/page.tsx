@@ -22,7 +22,7 @@ export default function Home() {
     
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${apiUrl}/`);
+      const response = await fetch(`${apiUrl}/api/v1/hello`);
       
       if (!response.ok) {
         throw new Error(`APIリクエストが失敗しました: ${response.status}`);

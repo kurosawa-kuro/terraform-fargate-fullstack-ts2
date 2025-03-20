@@ -1,9 +1,41 @@
 # ================================
 # Frontend
 # ================================
-# src/frontend && npm run dev
 frontend-dev:
 	cd src/frontend && npm run dev
+
+frontend-build:
+	cd src/frontend && npm run build
+
+frontend-start:
+	cd src/frontend && npm start
+
+frontend-lint:
+	cd src/frontend && npm run lint
+
+frontend-test:
+	cd src/frontend && npm test
+
+frontend-docker-build:
+	cd src/frontend && docker build -t nextjs-app .
+
+frontend-docker-run:
+	cd src/frontend && docker run -p 3000:3000 --name nextjs-container nextjs-app
+
+frontend-docker-run-detached:
+	cd src/frontend && docker run -d -p 3000:3000 --name nextjs-container nextjs-app
+
+frontend-docker-stop:
+	docker stop nextjs-container && docker rm nextjs-container
+
+frontend-docker-logs:
+	docker logs nextjs-container
+
+frontend-docker-shell:
+	docker exec -it nextjs-container /bin/sh
+
+frontend-docker-all: frontend-docker-build frontend-docker-run
+	@echo "Dockerコンテナを起動しました。ブラウザで http://localhost:3000 にアクセスしてください"
 
 # ================================
 # Backend
@@ -11,16 +43,17 @@ frontend-dev:
 backend-dev:
 	cd src/backend && GO_ENV=dev go run main.go
 
+backend-mod-tidy:
+	cd src/backend && go mod tidy
+
 backend-docker-build:
 	cd src/backend && docker build -t gin-app .
 
-
+backend-docker-run:
+	cd src/backend && docker run -p 8080:8080 --name gin-container gin-app
 
 backend-docker-run-detached:
-	cd src/backend && docker run -d -p 80:80 --name gin-container gin-app
-
-backend-docker-run:
-	cd src/backend && docker run -p 80:80 --name gin-container gin-app
+	cd src/backend && docker run -d -p 8080:8080 --name gin-container gin-app
 
 backend-docker-stop:
 	docker stop gin-container && docker rm gin-container
@@ -32,12 +65,12 @@ backend-docker-shell:
 	docker exec -it gin-container /bin/sh
 
 backend-test:
-	curl http://localhost:8080/api/health
-	curl http://localhost:8080/api/v1/ping
+	curl http://localhost:80808080/api/health
+	curl http://localhost:80808080/api/v1/ping
 
 backend-test-prod:
-	curl http://localhost:80/api/health
-	curl http://localhost:80/api/v1/ping
+	curl http://localhost:8080/api/health
+	curl http://localhost:8080/api/v1/ping
 
 backend-docker-all: backend-docker-build backend-docker-run
 	@echo "Dockerコンテナを起動しました。テストするには 'make backend-test' を実行してください"
@@ -46,7 +79,7 @@ backend-docker-all: backend-docker-build backend-docker-run
 # Curl
 # ================================
 curl:
-	curl localhost:8080
+	curl localhost:80808080
 
 # ================================
 # Infra

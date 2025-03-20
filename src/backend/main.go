@@ -26,10 +26,11 @@ func initEnv() {
 		env = "dev" // デフォルトは開発環境
 	}
 
+	// Dockerコンテナ内では環境変数が直接設定されるため、ファイル読み込みをスキップする可能性も考慮
 	envFile := fmt.Sprintf(".env.%s", env)
 	err := godotenv.Load(envFile)
 	if err != nil {
-		log.Printf("警告: %s ファイルが見つかりません。デフォルト設定を使用します。", envFile)
+		log.Printf("警告: %s ファイルが見つかりません。環境変数が直接設定されていることを確認してください。", envFile)
 	} else {
 		log.Printf("環境設定を %s から読み込みました", envFile)
 	}
@@ -61,7 +62,7 @@ func main() {
 
 	// CORSミドルウェアの設定
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://52.199.151.155:3000", "http://localhost:3000"},
+		AllowOrigins:     []string{"http://52.199.151.155:3000", "http://localhost:3000", "http://localhost:8080"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -77,9 +78,7 @@ func main() {
 	// ルートパスのハンドラ
 	router.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{
-			"message": "Hello World from Go Gin Backend!",
-			"version": apiVersion,
-			"env":     os.Getenv("ENV"),
+			"status": "healthy",
 		})
 	})
 
@@ -88,7 +87,7 @@ func main() {
 	{
 		api.GET("/hello", func(c *gin.Context) {
 			c.JSON(200, gin.H{
-				"message": "Hello from API!",
+				"message": "hello world",
 			})
 		})
 
@@ -102,8 +101,12 @@ func main() {
 	// サーバー起動
 	port := getPort()
 	log.Printf("サーバーを起動しています: http://localhost:%s", port)
-	log.Printf("0320 1730")
-	log.Printf("DATABASE_URL: %s", os.Getenv("DATABASE_URL"))
-	log.Printf("secret: %s", os.Getenv("SECRET"))
-	router.Run(":" + port)
+
+	// センシティブな情報はデバッグモードでのみログ出力する
+	if os.Getenv("LOG_LEVEL") == "debug" {
+		log.Printf("DATABASE_URL: %s", os.Getenv("DATABASE_URL"))
+		log.Printf("SECRET: %s", os.Getenv("SECRET"))
+	}
+
+	router.Run("0.0.0.0:" + port)
 }
