@@ -19,10 +19,20 @@ export default function Home() {
   const fetchApiData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
+      // 環境変数が設定されていれば使用、なければ同じドメインのAPIを使用（本番環境用）
+      // 明示的にlocalhostを指定する場合はNEXT_PUBLIC_API_URLで設定
+      // この分岐はFargateの場合環境変数ファイルから読み込まれる訳じゃない観点でコーディングしないと意味がなくなる
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin;
+      console.log('API URL:', apiUrl);
+      const endpoint = `${apiUrl}/api/v1/hello`;
+      
+      console.log('APIエンドポイント:', endpoint);
+
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const response = await fetch(`${apiUrl}/api/v1/hello`);
+
+      
+      const response = await fetch(endpoint);
       
       if (!response.ok) {
         throw new Error(`APIリクエストが失敗しました: ${response.status}`);

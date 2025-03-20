@@ -23,7 +23,7 @@ func getPort() string {
 func initEnv() {
 	env := os.Getenv("GO_ENV")
 	if env == "" {
-		env = "dev" // デフォルトは開発環境
+		env = "development" // デフォルトは開発環境
 	}
 
 	// Dockerコンテナ内では環境変数が直接設定されるため、ファイル読み込みをスキップする可能性も考慮
@@ -62,7 +62,14 @@ func main() {
 
 	// CORSミドルウェアの設定
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://52.199.151.155:3000", "http://localhost:3000", "http://localhost:8080"},
+		AllowOrigins: []string{
+			"http://52.199.151.155:3000",
+			"http://52.199.151.155:8080",
+			"http://localhost:3000",
+			"http://localhost:8080",
+			"http://fullstack-01-alb-1118263191.ap-northeast-1.elb.amazonaws.com:3000",
+			"http://fullstack-01-alb-1118263191.ap-northeast-1.elb.amazonaws.com:8080",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

@@ -20,6 +20,13 @@ variable "aws_region" {
   default = "ap-northeast-1"
 }
 
+# プロジェクト共通の接頭辞を定数として管理
+variable "prefix" {
+  type        = string
+  default     = "fullstack-02"
+  description = "プロジェクトリソースの共通接頭辞"
+}
+
 ##############################################################################
 # デフォルト VPC ＆ サブネットデータソースの取得
 #  - デフォルト VPC 内の「デフォルトパブリックサブネット」を取得して使用します
@@ -47,7 +54,7 @@ data "aws_subnets" "public" {
 #  - Backend: Frontend → ポート8080
 ##############################################################################
 resource "aws_security_group" "alb_sg" {
-  name        = "fullstack-01-alb-sg"
+  name        = "${var.prefix}-alb-sg"
   description = "Security group for ALB (HTTP 80 only)"
   vpc_id      = data.aws_vpc.default.id
 
@@ -68,13 +75,22 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # 追加すべきルール
+  ingress {
+    description = "Allow HTTP 8080 from anywhere"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = {
-    Name = "fullstack-01-alb-sg"
+    Name = "${var.prefix}-alb-sg"
   }
 }
 
 resource "aws_security_group" "frontend_sg" {
-  name        = "fullstack-01-frontend-sg"
+  name        = "${var.prefix}-frontend-sg"
   description = "Security group for Frontend ECS tasks"
   vpc_id      = data.aws_vpc.default.id
 
@@ -96,22 +112,31 @@ resource "aws_security_group" "frontend_sg" {
   }
 
   tags = {
-    Name = "fullstack-01-frontend-sg"
+    Name = "${var.prefix}-frontend-sg"
   }
 }
 
 resource "aws_security_group" "backend_sg" {
-  name        = "fullstack-01-backend-sg"
+  name        = "${var.prefix}-backend-sg"
   description = "Security group for Backend ECS tasks"
   vpc_id      = data.aws_vpc.default.id
 
-  # Backend へのインバウンド: Frontend SG からポート8080を許可
+  # 現在の設定
   ingress {
     description     = "Allow Frontend to call Backend(8080)"
     from_port       = 8080
     to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.frontend_sg.id]
+  }
+  
+  # 追加必要な設定
+  ingress {
+    description     = "Allow ALB to call Backend(8080)"
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   # Backend のアウトバウンドはすべて許可
@@ -123,7 +148,7 @@ resource "aws_security_group" "backend_sg" {
   }
 
   tags = {
-    Name = "fullstack-01-backend-sg"
+    Name = "${var.prefix}-backend-sg"
   }
 }
 
@@ -131,18 +156,18 @@ resource "aws_security_group" "backend_sg" {
 # ALB & リスナー & ターゲットグループ
 ##############################################################################
 resource "aws_lb" "alb" {
-  name               = "fullstack-01-alb"
+  name               = "${var.prefix}-alb"
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = data.aws_subnets.public.ids
 
   tags = {
-    Name = "fullstack-01-alb"
+    Name = "${var.prefix}-alb"
   }
 }
 
 resource "aws_lb_target_group" "frontend_tg" {
-  name     = "fullstack-01-frontend-tg"
+  name     = "${var.prefix}-frontend-tg"
   port     = 3000
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
@@ -165,7 +190,7 @@ resource "aws_lb_target_group" "frontend_tg" {
   }
 
   tags = {
-    Name = "fullstack-01-frontend-tg"
+    Name = "${var.prefix}-frontend-tg"
   }
 }
 
@@ -185,13 +210,57 @@ resource "aws_lb_listener" "alb_listener_http" {
   }
 }
 
+resource "aws_lb_target_group" "backend_tg" {
+  name        = "${var.prefix}-backend-tg"
+  port        = 8080
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip"
+
+  # ルートパス "/" をヘルスチェックに使用
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 3
+  }
+
+  # 依存関係の正しい削除順序を保証するためのライフサイクル設定
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "${var.prefix}-backend-tg"
+  }
+}
+
+resource "aws_lb_listener" "alb_listener_backend" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = "8080"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+  # リソース削除時の依存関係を適切に処理するためにライフサイクルを追加
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 ##############################################################################
 # ECS クラスター
 ##############################################################################
 resource "aws_ecs_cluster" "cluster" {
-  name = "fullstack-01-cluster"
+  name = "${var.prefix}-cluster"
   tags = {
-    Name = "fullstack-01-cluster"
+    Name = "${var.prefix}-cluster"
   }
 }
 
@@ -209,11 +278,11 @@ data "aws_iam_policy_document" "ecs_task_execution_role_assume" {
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "fullstack-01-ecs-task-execution-role"
+  name               = "${var.prefix}-ecs-task-execution-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role_assume.json
 
   tags = {
-    Name = "fullstack-01-ecs-task-execution-role"
+    Name = "${var.prefix}-ecs-task-execution-role"
   }
 }
 
@@ -226,12 +295,12 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 # CloudWatch Logs グループ (Frontend / Backend)
 ##############################################################################
 resource "aws_cloudwatch_log_group" "frontend_log_group" {
-  name              = "/ecs/fullstack-01-frontend"
+  name              = "/ecs/${var.prefix}-frontend"
   retention_in_days = 30
 }
 
 resource "aws_cloudwatch_log_group" "backend_log_group" {
-  name              = "/ecs/fullstack-01-backend"
+  name              = "/ecs/${var.prefix}-backend"
   retention_in_days = 30
 }
 
@@ -241,7 +310,7 @@ resource "aws_cloudwatch_log_group" "backend_log_group" {
 #  - Backend タスク (backend-8080)
 ##############################################################################
 resource "aws_ecs_task_definition" "frontend_td" {
-  family                   = "fullstack-01-frontend"
+  family                   = "${var.prefix}-frontend"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 256
@@ -254,6 +323,12 @@ resource "aws_ecs_task_definition" "frontend_td" {
     "name": "frontend",
     "image": "kurosawakuro/frontend-3000",
     "essential": true,
+    "environment": [
+      {
+        "name": "NEXT_PUBLIC_API_URL",
+        "value": "http://${aws_lb.alb.dns_name}:8080"
+      }
+    ],
     "portMappings": [
       {
         "containerPort": 3000,
@@ -273,12 +348,12 @@ resource "aws_ecs_task_definition" "frontend_td" {
 EOT
 
   tags = {
-    Name = "fullstack-01-frontend-td"
+    Name = "${var.prefix}-frontend-td"
   }
 }
 
 resource "aws_ecs_task_definition" "backend_td" {
-  family                   = "fullstack-01-backend"
+  family                   = "${var.prefix}-backend"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = 256
@@ -310,7 +385,7 @@ resource "aws_ecs_task_definition" "backend_td" {
 EOT
 
   tags = {
-    Name = "fullstack-01-backend-td"
+    Name = "${var.prefix}-backend-td"
   }
 }
 
@@ -320,7 +395,7 @@ EOT
 #  - Backend は内部呼び出し用 (LB不要)
 ##############################################################################
 resource "aws_ecs_service" "frontend_service" {
-  name            = "fullstack-01-frontend-service"
+  name            = "${var.prefix}-frontend-service"
   cluster         = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.frontend_td.arn
   desired_count   = 1
@@ -346,12 +421,12 @@ resource "aws_ecs_service" "frontend_service" {
   }
 
   tags = {
-    Name = "fullstack-01-frontend-service"
+    Name = "${var.prefix}-frontend-service"
   }
 }
 
 resource "aws_ecs_service" "backend_service" {
-  name            = "fullstack-01-backend-service"
+  name            = "${var.prefix}-backend-service"
   cluster         = aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.backend_td.arn
   desired_count   = 1
@@ -364,9 +439,15 @@ resource "aws_ecs_service" "backend_service" {
   }
 
   # LB は不要: Frontend から直接 8080 で呼び出す想定
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+    container_name   = "backend"
+    container_port   = 8080
+  }
+
   depends_on = [aws_ecs_service.frontend_service]
 
   tags = {
-    Name = "fullstack-01-backend-service"
+    Name = "${var.prefix}-backend-service"
   }
 }
