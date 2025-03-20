@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -57,6 +58,15 @@ func main() {
 
 	// Ginルーターの初期化
 	router := gin.Default()
+
+	// CORSミドルウェアの設定
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://52.199.151.155:3000", "http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	// APIバージョン取得
 	apiVersion := os.Getenv("API_VERSION")

@@ -1,12 +1,15 @@
 # ================================
 # Front
 # ================================
+# src/frontend && npm run dev
+frontend-dev:
+	cd src/frontend && npm run dev
 
 # ================================
 # Back
 # ================================
-run:
-	GO_ENV=dev go run main.go
+backend-dev:
+	cd src/backend && GO_ENV=dev go run main.go
 
 # ================================
 # Curl
