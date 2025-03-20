@@ -1,0 +1,102 @@
+# ================================
+# 一般的な不要ファイル・OS固有ファイル
+# ================================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# ================================
+# Node.js / JavaScript / TypeScript
+# ================================
+# Node依存パッケージ
+node_modules/
+
+# ビルド結果（Next.jsなど）
+.next/
+dist/
+out/
+build/
+
+# 一時ファイル
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 環境変数ファイル
+.env
+.env.local
+.env.development
+.env.development.local
+.env.production
+.env.production.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# ================================
+# Go (Golang)
+# ================================
+# Goビルド成果物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Goモジュールキャッシュや依存
+vendor/
+# 一時的にvendorを使うなら、必要に応じてコメントアウト
+# vendor/*
+
+# バイナリ
+bin/
+tmp/
+
+# カバレッジ
+*.coverprofile
+*.coverage
+coverage/
+
+# ================================
+# Terraform
+# ================================
+.terraform/
+.terraform.lock.hcl
+# ステートファイルおよびバックアップ
+terraform.tfstate
+terraform.tfstate.backup
+# 環境変数ファイルやAWS認証情報
+*.tfvars
+*.tfvars.json
+
+# ================================
+# Docker (任意)
+# ================================
+# Dockerビルド用の一時ファイル
+*.dockerfile-local
+docker-compose.override.yml
+# Dockerコンテナ一時データ
+docker-data/
+
+# ================================
+# IDE / エディタ固有
+# ================================
+# Visual Studio Code
+.vscode/
+# IntelliJ / Goland / WebStorm
+.idea/
+*.iml
+# Eclipse
+.project
+.classpath
+.settings/
+# その他エディタ
+*.sublime-project
+*.sublime-workspace
