@@ -3,14 +3,14 @@
 # ================================
 
 # Docker関連の変数
-DOCKER_IMAGE_NAME := kurosawakuro/backend-8080
-DOCKER_TAG ?= latest
-DOCKER_FULL_IMAGE := $(DOCKER_IMAGE_NAME):$(DOCKER_TAG)
-DOCKER_CONTAINER_NAME := backend-container
+BACKEND_DOCKER_IMAGE_NAME := kurosawakuro/backend-8080
+BACKEND_DOCKER_TAG ?= latest
+BACKEND_DOCKER_FULL_IMAGE := $(BACKEND_DOCKER_IMAGE_NAME):$(BACKEND_DOCKER_TAG)
+BACKEND_DOCKER_CONTAINER_NAME := backend-container
 
 # ECR関連の変数
 ECR_REPO := 123456789012.dkr.ecr.ap-northeast-1.amazonaws.com/backend-8080
-ECR_TAG ?= $(DOCKER_TAG)
+ECR_TAG ?= $(BACKEND_DOCKER_TAG)
 ECR_FULL_IMAGE := $(ECR_REPO):$(ECR_TAG)
 
 # ポート設定
@@ -23,25 +23,25 @@ backend-mod-tidy:
 	cd src/backend && go mod tidy
 
 backend-docker-build:
-	cd src/backend && docker build -t $(DOCKER_FULL_IMAGE) .
+	cd src/backend && docker build -t $(BACKEND_DOCKER_FULL_IMAGE) .
 
 backend-docker-run:
-	cd src/backend && docker run -p $(BACKEND_PORT):$(BACKEND_PORT) --name $(DOCKER_CONTAINER_NAME) $(DOCKER_FULL_IMAGE)
+	cd src/backend && docker run -p $(BACKEND_PORT):$(BACKEND_PORT) --name $(BACKEND_DOCKER_CONTAINER_NAME) $(BACKEND_DOCKER_FULL_IMAGE)
 
 backend-docker-push-dockerhub:
-	cd src/backend && docker push $(DOCKER_FULL_IMAGE)
+	cd src/backend && docker push $(BACKEND_DOCKER_FULL_IMAGE)
 
 backend-docker-push-ecr:
 	cd src/backend && docker push $(ECR_FULL_IMAGE)
 
 backend-docker-stop:
-	docker stop $(DOCKER_CONTAINER_NAME) && docker rm $(DOCKER_CONTAINER_NAME)
+	docker stop $(BACKEND_DOCKER_CONTAINER_NAME) && docker rm $(BACKEND_DOCKER_CONTAINER_NAME)
 
 backend-docker-logs:
-	docker logs $(DOCKER_CONTAINER_NAME)
+	docker logs $(BACKEND_DOCKER_CONTAINER_NAME)
 
 backend-docker-shell:
-	docker exec -it $(DOCKER_CONTAINER_NAME) /bin/sh
+	docker exec -it $(BACKEND_DOCKER_CONTAINER_NAME) /bin/sh
 
 backend-test:
 	curl http://localhost:$(BACKEND_PORT)/api/health
