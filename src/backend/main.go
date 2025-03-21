@@ -114,6 +114,7 @@ func main() {
 	if os.Getenv("LOG_LEVEL") == "debug" {
 		log.Printf("DATABASE_URL: %s", os.Getenv("DATABASE_URL"))
 		log.Printf("SECRET: %s", os.Getenv("SECRET"))
+		log.Printf("2")
 	}
 
 	router.Run("0.0.0.0:" + port)
