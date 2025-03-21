@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ production, development ]
+  pull_request:
+    branches: [ production, development ]
+
+jobs:
+  frontend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+      - name: Lint
+        working-directory: src/frontend
+        run: npm run lint
+    #   - name: Test
+    #     working-directory: src/frontend
+    #     run: npm test

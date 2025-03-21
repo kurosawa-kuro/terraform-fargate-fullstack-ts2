@@ -1,0 +1,28 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# 例外: 他のtfvarsファイルを含める場合
+# !example.tfvars
+
+# ログファイル
+*.log
+
+# 依存関係
+node_modules/
+.npm
+
+# その他
+.DS_Store
+.env
+.env.*
+!.env.example 
