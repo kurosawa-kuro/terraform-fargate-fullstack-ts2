@@ -39,6 +39,9 @@ frontend-docker-push-dockerhub:
 frontend-docker-push-ecr:
 	cd src/frontend && docker push $(ECR_FULL_IMAGE)
 
+# deploy frontend-docker-build frontend-docker-push-dockerhub
+frontend-deploy: frontend-docker-build frontend-docker-push-dockerhub
+
 frontend-docker-stop:
 	docker stop $(FRONTEND_DOCKER_CONTAINER_NAME) && docker rm $(FRONTEND_DOCKER_CONTAINER_NAME)
 

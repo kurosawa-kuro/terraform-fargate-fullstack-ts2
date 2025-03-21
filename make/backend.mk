@@ -30,6 +30,14 @@ backend-docker-run:
 
 backend-docker-push-dockerhub:
 	cd src/backend && docker push $(BACKEND_DOCKER_FULL_IMAGE)
+# deploy backend-docker-build backend-docker-push-dockerhub
+backend-deploy: backend-docker-build backend-docker-push-dockerhub
+
+backend-docker-stop:
+	docker stop $(BACKEND_DOCKER_CONTAINER_NAME) && docker rm $(BACKEND_DOCKER_CONTAINER_NAME)
+
+backend-docker-logs:
+	docker logs $(BACKEND_DOCKER_CONTAINER_NAME)
 
 backend-docker-push-ecr:
 	cd src/backend && docker push $(ECR_FULL_IMAGE)
