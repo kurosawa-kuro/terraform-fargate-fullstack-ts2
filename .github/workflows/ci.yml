@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [ production, development ]
+    branches:
+      - production
+      - development
   pull_request:
-    branches: [ production, development ]
+    branches:
+      - production
+      - development
 
 jobs:
   frontend-test:
@@ -23,9 +27,6 @@ jobs:
       - name: Lint
         working-directory: src/frontend
         run: npm run lint
-    #   - name: Test
-    #     working-directory: src/frontend
-    #     run: npm test
 
   backend-test:
     runs-on: ubuntu-latest
